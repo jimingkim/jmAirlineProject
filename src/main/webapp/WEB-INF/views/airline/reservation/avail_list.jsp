@@ -3,7 +3,7 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
 <!DOCTYPE html>
-<html>
+<html> 
 <head>
 <meta charset="UTF-8">
 <title>항공편 선택</title>
@@ -18,7 +18,7 @@
   <div class="hidden">${user.userNum}</div>
    <div class="itinerary-section">
       <div class="title"
-         style="position: absolute; left: 240px; font-size: 20pt; font-weight: bolder;">
+         style="position: absolute; left: 220px; font-size: 20pt; font-weight: bolder;">
          <h2>항공편 선택</h2>
       </div>
     <form id="submitForm" method="GET" action="/airline/reservation/selectSeat">
