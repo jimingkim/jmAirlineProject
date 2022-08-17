@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ezen.airline.mappers.userMapper">
+
+	<!-- 회원가입한다 -->
+	<insert id="signup" parameterType="com.ezen.airline.domain.UserVO" useGeneratedKeys ="true" keyProperty= "userNum">
+		insert into tbl_user(userName, userId, passwd, phone, passPort)
+		values(#{userName}, #{userId}, #{passwd}, #{phone}, #{passPort})
+	</insert>
+	
+	<!-- 중복처리방지를 위해 유저목록을 가져온다 -->
+	<select id= "userList" resultType="String">
+	   select userId
+	   from tbl_user
+	</select>
+	<!-- 로그인한다 -->
+	<select id="signin" resultType="com.ezen.airline.domain.UserVO">
+ 		select *
+ 		from tbl_user
+ 		where userId = #{userId} and passwd= #{passwd}
+	</select>
+	
+	<!-- 회원정보 수정을 처리한다(POST) -->
+   <update id="updateUser">
+     update tbl_user 
+     set userName = #{userName},
+          passwd = #{passwd},
+         phone = #{phone},
+         passPort = #{passPort},
+         up_Date = #{up_Date}
+     where userId = #{userId}
+ </update>
+ 
+	<!-- 회원탈퇴처리한다 -->
+	<delete id="deleteUser">
+	 delete from tbl_user where userId=#{userId};
+	</delete>
+	
+
+</mapper>

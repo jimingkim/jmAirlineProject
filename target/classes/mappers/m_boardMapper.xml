@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ezen.airline.mappers.m_boardMapper">
+
+ <!-- 사용자와상관없이 모든 문의내역을 가져온다-->
+ <select id ="inqueryList" resultType="com.ezen.airline.domain.BoardVO">
+     select (SELECT @ROWNUM:=@ROWNUM+1 AS ROWNUM from (select @rownum:=0) tmp) as ROWNUM,
+     b.b_index,b.b_title,bk.b_kind_name,
+     b.userId,
+     b.b_regDate,b.b_replyed 
+    from tbl_board b 
+    inner join tbl_board_kind bk
+    on b.b_kind=bk.b_kind_id;
+ </select>
+ 
+
+ 
+ <!-- 사용자의 게시물에 답변을 등록한다 ajax -->
+ <insert id ="insertReply">
+  insert into tbl_reply (b_index,r_writer,r_reply)
+  values (#{b_index},#{r_writer},#{r_reply})
+  <!-- r_index는 자동증가값, r_regDate는 디폴트값 -->
+ </insert>
+ 
+ <!-- 사용자의 해당 게시글 번호의 게시물에 관리자의 답변을 보여준다 -->
+ <select id="showReply" resultType="com.ezen.airline.domain.ReplyVO">
+  select r_index,b_index,r_writer,r_reply,r_regDate
+  from tbl_reply
+  where b_index =#{b_index}
+ </select>
+ 
+ <!--  관리자가 본인이 쓴 답급을 삭제한다 -->
+	<delete id="deleteReply">
+	delete from tbl_reply
+	where r_index=#{r_index} and b_index =#{b_index}
+	</delete>
+	
+	<!--  답글등록여부를 업뎃한다 -->
+	<update id="updateReplyed">
+	 update tbl_board
+	 set b_replyed = 1
+	 where b_index = #{b_index}
+	</update>
+ 
+</mapper>

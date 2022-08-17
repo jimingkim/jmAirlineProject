@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ezen.airline.mappers.adminMapper">
+
+	<!-- ******************** airport ******************** -->
+	<!-- 공항(취항지)을 등록한다  -->
+	<insert id="airport_register">
+	 	insert into tbl_airport (aptCode, ctyName)
+	  	values (#{aptCode}, #{ctyName})
+	</insert>
+	
+	<!-- 공항목록을 가져온다 -->
+	<select id="airportList" resultType="com.ezen.airline.domain.AirportVO">
+	 select aptCode,ctyName
+	 from tbl_airport
+	</select>
+	
+	<!-- 공항에 대한 정보를 수정한다 -->
+	<update id="airport_modify" parameterType="com.ezen.airline.domain.AirportVO">
+	  update tbl_airport
+	  set  ctyName=#{ctyName}
+	  WHERE aptCode=#{aptCode}
+	</update>
+	
+	<!-- 공항을 삭제한다 -->
+	<delete id="airportDel">
+	  delete from tbl_airport
+	  where aptCode=#{aptCode}
+	</delete>
+	
+	<!-- airport count -->
+	<select id="airportCount" resultType="int">
+		select count(*)
+		from tbl_airport
+	</select>
+
+	<!-- ******************** aircraft ******************** -->	
+	
+	<!-- 항공기 목록을 가져온다 -->
+	<select id="aircraftList" resultType="com.ezen.airline.domain.AircraftVO">
+	 select acftName,acftModel,acftCarrd
+	 from tbl_aircraft
+	</select>
+	
+	<!-- 항공기를 등록한다 -->
+	<insert id="aircraft_register">
+	 	insert into tbl_aircraft (acftName, acftModel, acftCarrd)
+	    values (#{acftName}, #{acftModel}, #{acftCarrd})
+	</insert>
+	
+	<!-- 항공기를 삭제한다 -->
+	<delete id="aircraftDel" >
+	  delete from tbl_aircraft
+	  where acftName=#{acftName}
+	</delete>
+	<!-- ******************** flight ******************** -->	
+	
+	
+	<!-- flight list -->
+	<select id="flightList" resultType="com.ezen.airline.domain.FlightVO">
+		select flgtName,depCode, arrCode
+		from tbl_flight
+	</select>
+	
+	<!-- flight regist -->
+	<insert id="flightRegi">
+	 	INSERT into tbl_flight (flgtName, depCode, arrCode)
+	  	VALUES (#{flgtName}, #{depCode}, #{arrCode})
+	</insert>
+	
+	<!-- 항공편 삭제 -->
+	<delete id="flightDel">
+	 delete from tbl_flight
+	 where flgtName=#{flgtName}
+	</delete>
+	
+	
+	<!-- 특정flgtName에 해당하는 항공편 정보를가져온다 -->
+	
+	<select id="flightListByFlgtName" resultType="com.ezen.airline.domain.FlightVO">
+	select flgtName,arrCode,depCode
+	from tbl_flight
+	where flgtName=#{flgtName}
+	</select>
+	
+	<!-- 항공편 수정 -->
+	<update id="flight_modify">
+	 update tbl_flight
+	 set arrCode = #{arrCode},
+	     depCode= #{depCode}
+	  WHERE flgtName=#{flgtName}
+	</update>
+	
+	<!-- ******************** itinerary ******************** -->	
+	<!-- 비행일정을 등록한다 -->
+	<insert id="itineraryRegi">
+	 insert into tbl_itinerary (itnyName, depTime, arrTime, flgtName, acftName, itnyPrice ,discount_rate , acftCarrd)
+	 values (#{itnyName}, #{depTime}, #{arrTime}, #{flgtName}, #{acftName}, #{itnyPrice} ,#{discount_rate} , (select acftCarrd from tbl_aircraft a where a.acftName =  #{acftName}))
+	</insert>
+	
+	<!-- 비행일정목록 -->
+	<select id="itineraryList" resultType="com.ezen.airline.domain.ItineraryVO">
+	select itnyName,depCode,arrCode,depTime,arrTime,i.flgtName,acftName,itnyPrice
+	from tbl_itinerary i,tbl_flight f
+	where i.flgtName=f.flgtName 
+	<!-- select i.itnyName, i.depTime, i.arrTime,
+            i.flgtName, i.acftName, i.itnyPrice,
+         f.depCode, f.arrCode
+      from tbl_itinerary i
+      inner join tbl_flight f
+      on i.flgtName = f.flgtName -->
+    </select>
+    
+	<!-- 특정한 비행일정내용을 가져온다 -->
+	<select id = "findItinerary" resultType="com.ezen.airline.domain.ItineraryVO">
+	 select itnyName,depCode,arrCode,depTime,arrTime,i.flgtName,acftName,itnyPrice
+	 from tbl_itinerary i,tbl_flight f
+	 where i.flgtName=f.flgtName and itnyName =#{itnyName}
+	</select>
+	
+	<!-- 비행일정 수정 -->
+	<update id="itinerary_modify">
+	UPDATE tbl_itinerary
+	SET flgtName=#{flgtName}, 
+	    depTime=#{depTime}, 
+	    arrTime=#{arrTime}, 
+	    acftName=#{acftName},
+	    itnyPrice=#{itnyPrice} 
+	 WHERE itnyName=#{itnyName}
+	</update>
+	
+	<!-- 비행일정 삭제 -->
+	<delete id="itineraryDel">
+	 delete from tbl_itinerary
+	 where itnyName=#{itnyName}
+	</delete>
+
+    <!-- ******************** seat ******************** -->	
+
+    <!-- itnyName에따른 좌석목록을가져온다 -->
+    <select id ="seat_list" resultType="com.ezen.airline.domain.SeatVO">
+       select s.seatNum, s.itnyName, s.seatClass, s.avail
+        from tbl_seat s
+        inner join tbl_itinerary i
+        on s.itnyName = i.itnyName
+        inner join tbl_flight f
+        on i.flgtName = f.flgtName
+        where s.itnyName = #{itnyName}
+        </select>
+     <!-- 이 where절을 위해 itnyName을 seat테이블에도준거지 -->
+     
+     <!-- itnyName에 해당하는 항공편명,출발지,도착지 가져온다 -->
+     <select id ="flightByItnyName" resultType="com.ezen.airline.domain.FlightVO">
+     select f.flgtName,depCode,arrCode
+     from tbl_flight f
+     inner join tbl_itinerary i
+     on i.flgtName = f.flgtName
+     where i.itnyName = #{itnyName}
+    </select>
+   
+</mapper>

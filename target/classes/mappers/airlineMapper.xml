@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ezen.airline.mappers.airlineMapper">
+
+    
+    <!--******** avail_list.jsp에서 보여주기 위한 sql문******** -->
+    
+    <!-- search화면에서 비행스케줄 지정 시 조건에 맞는 항공편만 보여준다 -->
+    <select id= "listBySchedule" resultType="com.ezen.airline.domain.ItineraryVO">
+    select itnyName,f.depCode,f.arrCode,f.flgtName,acftName,depTime,arrTime,itnyPrice,discount_rate
+            from tbl_flight f
+            inner join tbl_itinerary i
+            on f.flgtName = i.flgtName 
+            where f.depCode=#{depCode} and f.arrCode=#{arrCode}
+            and depTime between #{depTime} and (SELECT date_add(#{depTime},interval 1 DAY))
+    </select> 
+    
+    <!-- search화면에서 비행스케줄 지정 시 조건에 맞는 항공편만 보여준다 -->
+    <select id= "listBySchedule2" resultType="com.ezen.airline.domain.ItineraryVO">
+      select itnyName,depCode,arrCode,f.flgtName,acftName,depTime,arrTime,itnyPrice,discount_rate
+            from tbl_flight f 
+            inner join tbl_itinerary i 
+            on f.flgtName=i.flgtName 
+            where f.depCode=#{arrCode} and f.arrCode=#{depCode}
+            and depTime between #{depTime} and (SELECT date_add(#{depTime},interval 1 DAY))
+    </select> 
+    
+    <!-- depCode와 arrCode와 depTime을 조건으로 줬을 때 가는 여정갯수 -->
+    <select id="getCountItinerary" resultType="int">
+	    select count(*)
+	    from tbl_itinerary i
+	    inner join tbl_flight f
+	    on i.flgtName=f.flgtName
+	    where depCode=#{depCode} and arrCode=#{arrCode} and
+	    depTime between #{depTime} and (SELECT date_add(#{depTime},interval 1 DAY));
+    </select>
+    
+    <!-- depCode와 arrCode와 depTime을 조건으로 줬을 때 오는 여정갯수 -->
+    <select id="getCountItinerary2" resultType="int">
+	    select count(*)
+	    from tbl_itinerary i
+	    inner join tbl_flight f
+	    on i.flgtName=f.flgtName
+	    where depCode=#{arrCode} and arrCode=#{depCode} and
+	    depTime between #{depTime} and (SELECT date_add(#{depTime},interval 1 DAY));
+    </select>
+       
+    <!-- 가는여정,오는여정에 해당하는 arrCode와 depCode에 맞는 flight값 -->
+    <select id="goFlight" resultType="com.ezen.airline.domain.FlightVO">
+     select depCode,arrCode
+     from tbl_flight f 
+     where  depCode=#{depCode} and arrCode=#{arrCode}
+    </select>
+
+   <!--********selectSeat.jsp에서 보여주기 위한 sql문******** -->
+   <!-- 가는 여정의 좌석목록을 불러온다 -->
+   <select id="seatList0" resultType="com.ezen.airline.domain.SeatVO">
+      select seatNum, s.itnyName, s.acftName, seatClass, avail,i.flgtName,f.depCode, f.arrCode
+      from tbl_seat s
+      inner join tbl_itinerary i
+      on s.itnyName =i.itnyName and i.acftName = s.acftName
+      inner join tbl_flight f
+      on i.flgtName = f.flgtName
+      where s.itnyName = #{itnyName}
+      and s.avail = 'Y'
+   </select>
+   
+   <!-- 오는 여정의 좌석목록을 불러온다 -->
+   <select id="seatList1" resultType="com.ezen.airline.domain.SeatVO">
+      select seatNum, s.itnyName, s.acftName,seatClass, avail,i.flgtName,f.depCode, f.arrCode
+      from tbl_seat s
+      inner join tbl_itinerary i
+      on s.itnyName =i.itnyName and i.acftName = s.acftName
+      inner join tbl_flight f
+      on i.flgtName = f.flgtName
+      where s.itnyName = #{itnyName}
+      and s.avail = 'Y'
+   </select>
+   
+   <!-- 선택한 좌석의 목록을 보여준다 ajax -->
+   <select id = "seatCheck" resultType="com.ezen.airline.domain.SeatVO">
+   select seatNum,seatClass,itnyName
+   from tbl_seat
+   where seatNum = #{seatNum} and seatClass=#{seatClass} and itnyName =#{itnyName}
+   </select>
+   
+   <!-- 기종번호에 맞춰서 최대인원수 초과 못하게 막기 -->
+   <select id = "getAcftCarrd" resultType="com.ezen.airline.domain.ItineraryVO">
+    select acftCarrd,booked
+    from tbl_itinerary i
+    where itnyName = #{itnyName}
+   </select>
+   
+   <!-- 예약할수있는인원수를 초과한다면 jsp로 0을보냄 -->
+   <select id="getReservation_count" resultType="Integer">
+    select count(*)
+    from tbl_reservation
+    where itnyName = #{itnyName}
+    </select>
+    
+   
+   
+    <!-- 예약한다 -->
+    <insert id="reservRegi" parameterType="com.ezen.airline.domain.ReservationVO">
+      insert into tbl_reservation (resrvNum,resrvPrice_go,resrvPrice_come, userNum, seatNum_go,seatNum_come, itnyName_go,itnyName_come,account)
+      values(#{resrvNum},#{resrvPrice_go},#{resrvPrice_come},#{userNum},#{seatNum_go},#{seatNum_come},#{itnyName_go},#{itnyName_come},#{account});
+     <!-- 좌석등록 시 좌석번호가 같은데 등급이 다를수없음..온니원임.. -->
+     <!--   values (#{resrvPrice}, #{userNum}, #{seatNum}, #{itnyName},#{account});-->
+    </insert>
+    
+   
+   <!--********confirm_reservation.jsp에서 보여주기 위한 sql문******** -->
+ 
+  
+   <!-- 예약목록에 좌석들을 쪼개기 위해 사용 -->
+   <select id ="seatNum_split" resultType= "com.ezen.airline.domain.ReservationVO">
+   select seatNum_go,seatNum_come
+   from tbl_reservation
+   where resrvNum = #{resrvNum}
+   </select>
+   
+   <!-- 쪼개진 목록들을 update한다 -->
+   <update id="occupySeat">
+    update tbl_seat
+    set avail ='N'
+    where itnyName = #{itnyName}
+    and seatNum = #{seatNum}
+    </update>
+     
+     <!-- 여정번호의 avail컬럼이 'N'을 가진 갯수를 센다 -->
+     <select id="count_N" resultType="int">
+     select count(*)
+     from tbl_seat
+     where avail="N" and itnyName = #{itnyName}
+     </select>
+     
+     <!-- count를 tbl_itinerary의 booked에 업뎃한다 -->
+     <update id="updateCarrierd">
+     update tbl_itinerary
+     set booked = #{booked}
+     where itnyName = #{itnyName}
+     </update>
+   
+   
+   <!-- 가는여정의 예약내용을 가져온다 -->
+   <!-- db에서 tbl_seat이랑 tbl_reservation에 seatNum컬럼은 포린해제함 -->
+   <select id="reserveList0" resultType="com.ezen.airline.domain.ReservationVO">
+    SELECT userId,r.userNum,resrvNum,resrvDate,f.flgtName,seatNum_go,resrvPrice_go,itnyName_go,
+           depCode,arrCode,account,i.depTime,i.arrTime
+    FROM tbl_reservation r 
+    INNER JOIN tbl_itinerary i
+    ON r.itnyName_go = i.itnyName
+    INNER JOIN tbl_flight f
+    ON f.flgtName = i.flgtName
+    INNER JOIN tbl_user u
+    ON u.userNum= r.userNum
+    WHERE resrvNum =  #{resrvNum} 
+   </select>
+   
+   <!-- 오는여정의 예약내용을 가져온다 -->
+   <!-- db에서 tbl_seat이랑 tbl_reservation에 seatNum컬럼은 포린해제함 -->
+   <select id="reserveList1" resultType="com.ezen.airline.domain.ReservationVO">
+    SELECT userId,r.userNum,resrvNum,resrvDate,f.flgtName,seatNum_come,resrvPrice_come,itnyName_come,
+           depCode,arrCode,account,i.depTime,i.arrTime
+    FROM tbl_reservation r 
+    INNER JOIN tbl_itinerary i
+    ON r.itnyName_come = i.itnyName
+    INNER JOIN tbl_flight f
+    ON f.flgtName = i.flgtName
+    INNER JOIN tbl_user u
+    ON u.userNum= r.userNum
+    WHERE resrvNum =  #{resrvNum} 
+    </select>
+  
+  
+   
+   <!-- 예약번호가 있는지찾는다 -->
+   <select id ="resrvnumList" resultType= "String">
+   select resrvNum
+   from tbl_reservation
+   </select>
+   
+  
+</mapper>
