@@ -64,6 +64,7 @@ public class AdminController {
 		return "redirect:/admin/airport/airport_list";
 	}
 
+	
 	// 공항에 대한 정보를 수정한다(get)
 	@RequestMapping(value = "/airport/airport_modify", method = RequestMethod.GET)
 	public void getAirportModify(@RequestParam String aptCode, Model model) throws Exception {
@@ -86,7 +87,7 @@ public class AdminController {
 
 	// System.out.println(result);
 	// return result;
-	// }
+	// }d
 
 	// 공항을 삭제한다 (AJAX)
 	@ResponseBody
